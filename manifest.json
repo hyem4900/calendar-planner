@@ -1,11 +1,9 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "calendar-planner",
+	"name": "Calendar Planner",
 	"version": "1.0.0",
-	"minAppVersion": "1.0.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"minAppVersion": "1.7.2",
+	"description": "Right-sidebar month calendar that shows and inline-edits the events and todos of your weekly and daily notes.",
+	"author": "hyemin",
 	"isDesktopOnly": false
 }

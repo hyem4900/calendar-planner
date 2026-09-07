@@ -8,6 +8,7 @@ export default defineConfig(
 		'dist',
 		'esbuild.config.mjs',
 		'version-bump.mjs',
+		'vitest.config.ts',
 		'versions.json',
 		'main.js',
 		'package.json',
@@ -29,4 +30,14 @@ export default defineConfig(
 		},
 	},
 	...obsidianmd.configs.recommended,
+	{
+		rules: {
+			// This plugin's UI copy is Korean; the English sentence-case rule does not apply.
+			'obsidianmd/ui/sentence-case': 'off',
+			// The declarative settings API (getSettingDefinitions) requires Obsidian
+			// 1.13.0; manifest.minAppVersion is pinned at 1.7.2, so the imperative
+			// display() tab is intentional.
+			'obsidianmd/settings-tab/prefer-setting-definitions': 'off',
+		},
+	},
 );

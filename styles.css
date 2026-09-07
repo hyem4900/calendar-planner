@@ -1,8 +1,1256 @@
-/*
+/* Calendar Planner — sidebar calendar styles. Obsidian CSS variables only. */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.calendar-planner {
+	--cp-font-small: var(--font-ui-small);
+	--cp-font-smaller: calc(var(--font-ui-smaller) * 0.96);
+	--cp-num-font: calc(var(--cp-font-small) * 0.94);
+	--cp-marker-h: 1.8px;
+	--cp-marker-gap: 3px;
+	/* Nudge down from where the gap alone would put it. */
+	--cp-marker-drop: 2px;
+	/* Flow space the (absolutely placed) marker no longer takes; cells that
+	   carry one add it back as padding so the number keeps its position. */
+	--cp-marker-reserve: calc(var(--cp-marker-gap) + var(--cp-marker-h));
+	--cp-ease: 130ms ease;
+	position: relative;
+	color: var(--text-muted);
+	font-size: var(--cp-font-small);
+	text-transform: uppercase;
+	-webkit-user-select: none;
+	user-select: none;
+}
 
-If your plugin does not need CSS, delete this file.
+/* .calendar-planner sits on .view-content, whose padding Obsidian core and
+   themes set at matching specificity — anchor to the leaf so this wins. */
+.workspace-leaf-content[data-type="calendar-planner-view"] .calendar-planner {
+	padding: 12px 20px 18px;
+}
 
-*/
+
+/* ========================================================================
+   Header
+   ======================================================================== */
+
+.calendar-planner .cp-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 12px;
+	padding: 0;
+	margin: 4px 0 18px;
+}
+
+.calendar-planner .cp-title {
+	display: flex;
+	align-items: baseline;
+	gap: 7px;
+	color: var(--text-normal);
+	font-size: 1.35em;
+	line-height: 1.2;
+	letter-spacing: -0.01em;
+	text-transform: none;
+}
+
+.calendar-planner .cp-month {
+	font-size: 1.3em;
+	font-weight: 650;
+	color: var(--interactive-accent);
+}
+
+.calendar-planner .cp-year {
+	font-size: 1.3em;
+	font-weight: 600;
+	color: var(--text-muted);
+	margin-right: 1px;
+}
+
+.calendar-planner .cp-title-part {
+	display: flex;
+	align-items: baseline;
+	gap: 1px;
+}
+
+.calendar-planner .cp-title .is-link {
+	cursor: pointer;
+	border-radius: var(--radius-s);
+	padding: 0 3px;
+	margin: 0 -3px;
+	transition: background-color var(--cp-ease), box-shadow var(--cp-ease);
+}
+
+.calendar-planner .cp-title .is-link:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.calendar-planner .cp-title .is-link.is-active {
+	background-color: var(--background-modifier-hover);
+	box-shadow: inset 0 0 0 1px var(--interactive-accent);
+}
+
+.calendar-planner .cp-pick {
+	display: inline-flex;
+	align-items: center;
+	align-self: center;
+	justify-content: center;
+	padding: 1px;
+	border-radius: var(--radius-s);
+	color: var(--text-faint);
+	cursor: pointer;
+	transition: background-color var(--cp-ease), color var(--cp-ease);
+}
+
+.calendar-planner .cp-pick:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.calendar-planner .cp-pick .svg-icon {
+	width: 14px;
+	height: 14px;
+}
+
+.calendar-planner .cp-title .is-link:focus-visible,
+.calendar-planner .cp-pick:focus-visible {
+	outline: 1px solid var(--background-modifier-border-focus);
+	outline-offset: 1px;
+}
+
+
+/* ------------------------------------------------------------------------
+   Month / Year grid picker
+   ------------------------------------------------------------------------ */
+
+.calendar-planner .cp-picker {
+	position: absolute;
+	z-index: 30;
+	width: max-content;
+	max-width: calc(100% - 20px);
+	padding: 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background: var(--background-primary);
+	box-shadow: var(--shadow-l);
+}
+
+.calendar-planner .cp-picker-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 5px;
+	padding: 0 2px;
+}
+
+.calendar-planner .cp-picker-range {
+	color: var(--text-normal);
+	font-size: var(--cp-font-small);
+	font-weight: 600;
+}
+
+.calendar-planner .cp-picker-nav {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition: background-color var(--cp-ease), color var(--cp-ease);
+}
+
+.calendar-planner .cp-picker-nav:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.calendar-planner .cp-picker-nav .svg-icon {
+	width: 15px;
+	height: 15px;
+}
+
+.calendar-planner .cp-picker-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 3px;
+}
+
+.calendar-planner .cp-picker-cell {
+	padding: 7px 8px;
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	color: var(--text-normal);
+	font-size: var(--cp-font-smaller);
+	font-weight: 550;
+	line-height: 1.2;
+	letter-spacing: 0;
+	text-transform: none;
+	cursor: pointer;
+	transition: background-color var(--cp-ease), color var(--cp-ease);
+}
+
+.calendar-planner .cp-picker-cell:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.calendar-planner .cp-picker-cell.is-today {
+	color: var(--interactive-accent);
+}
+
+.calendar-planner .cp-picker-cell.is-current {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.calendar-planner .cp-nav {
+	display: flex;
+	align-items: center;
+	flex: none;
+	margin-right: -2px;
+	color: var(--text-muted);
+	font-size: var(--cp-font-smaller);
+	font-weight: 600;
+	letter-spacing: 0.06em;
+}
+
+.calendar-planner .cp-nav-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2px;
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	transition: background-color var(--cp-ease), color var(--cp-ease);
+}
+
+.calendar-planner .cp-nav-today {
+	padding: 2px 5px;
+}
+
+.calendar-planner .cp-nav-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.calendar-planner .cp-nav-btn .svg-icon {
+	width: 21px;
+	height: 21px;
+	stroke-width: 2.8px;
+}
+
+
+/* ========================================================================
+   Calendar Grid
+   ======================================================================== */
+
+.calendar-planner .cp-grid {
+	--cp-weeknum-max: calc(1.75em + var(--cp-font-smaller) * 1.5);
+	--cp-weeknum-w: min(var(--cp-weeknum-max), 10.5%);
+	--cp-weeknum-gutter: 20%;
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 3px 2px;
+	text-align: center;
+	align-items: start;
+}
+
+.calendar-planner .cp-grid.has-weeknum {
+	grid-template-columns: var(--cp-weeknum-w) repeat(7, minmax(0, 1fr));
+}
+
+.calendar-planner .cp-weekhead-w {
+	padding-right: var(--cp-weeknum-gutter);
+}
+
+
+/* ------------------------------------------------------------------------
+   Weekday header
+   ------------------------------------------------------------------------ */
+
+.calendar-planner .cp-weekhead {
+	padding-bottom: 8px;
+	color: var(--text-faint);
+	font-size: calc(var(--cp-font-smaller) * 0.92);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	line-height: 1;
+}
+
+.calendar-planner .cp-weekhead.is-sat {
+	color: var(--cp-sat-color, var(--text-faint));
+}
+
+.calendar-planner .cp-weekhead.is-sun {
+	color: var(--cp-sun-color, var(--text-faint));
+}
+
+
+/* ------------------------------------------------------------------------
+   Week number
+   ------------------------------------------------------------------------ */
+
+.calendar-planner .cp-weeknum {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	height: calc(var(--cp-num-font) * 3);
+	padding: 3px var(--cp-weeknum-gutter) 3px 0;
+	color: var(--text-faint);
+	font-size: var(--cp-num-font);
+	line-height: 1;
+}
+
+.calendar-planner .cp-grid.has-weeknum {
+	position: relative;
+}
+
+.calendar-planner .cp-grid.has-weeknum::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: calc(var(--cp-weeknum-w) + 1px);
+	width: 1px;
+	background-color: var(--background-modifier-border);
+	pointer-events: none;
+}
+
+.calendar-planner .cp-weeknum.is-clickable {
+	cursor: pointer;
+}
+
+.calendar-planner .cp-weeknum.is-clickable:hover {
+	color: var(--text-normal);
+}
+
+.calendar-planner .cp-weeknum.is-today-week .cp-weeknum-num {
+	color: var(--interactive-accent);
+	font-weight: 700;
+}
+
+.calendar-planner .cp-weeknum.is-current .cp-weeknum-num {
+	background-color: var(--background-modifier-hover);
+	box-shadow: inset 0 0 0 1px var(--interactive-accent);
+	color: var(--text-normal);
+}
+
+.calendar-planner .cp-weeknum.is-today-week.is-current .cp-weeknum-num {
+	background-color: var(--interactive-accent);
+	box-shadow: none;
+	color: var(--text-on-accent);
+	font-weight: 700;
+}
+
+
+/* ========================================================================
+   Day Cell
+   ======================================================================== */
+
+.calendar-planner .cp-day {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	height: calc(var(--cp-num-font) * 3);
+	padding: 3px 0;
+	color: var(--text-normal);
+	font-size: var(--cp-num-font);
+	line-height: 1;
+	cursor: pointer;
+}
+
+
+/* ------------------------------------------------------------------------
+   Number boxes
+   ------------------------------------------------------------------------ */
+
+.calendar-planner .cp-weeknum-num,
+.calendar-planner .cp-day-num {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.7em;
+	height: 1.7em;
+	max-width: 100%;
+	border-radius: 32%;
+	line-height: 1;
+	transition: background-color var(--cp-ease), color var(--cp-ease),
+		box-shadow var(--cp-ease);
+}
+
+
+/* ------------------------------------------------------------------------
+   Day states
+   ------------------------------------------------------------------------ */
+
+.calendar-planner .cp-day:hover .cp-day-num {
+	background-color: var(--background-modifier-hover);
+}
+
+.calendar-planner .cp-day.is-outside .cp-day-num {
+	color: var(--text-faint);
+}
+
+.calendar-planner .cp-day.is-today .cp-day-num {
+	color: var(--interactive-accent);
+	font-weight: 700;
+}
+
+.calendar-planner .cp-day.is-selected .cp-day-num {
+	background-color: var(--background-modifier-hover);
+	box-shadow: inset 0 0 0 1px var(--interactive-accent);
+	color: var(--text-normal);
+}
+
+.calendar-planner .cp-day.is-today.is-selected .cp-day-num {
+	background-color: var(--interactive-accent);
+	box-shadow: none;
+	color: var(--text-on-accent);
+	font-weight: 700;
+}
+
+
+/* ========================================================================
+   Note marker
+   ======================================================================== */
+
+/* Out of flow, so the cell's own centring never has to account for it. The
+   number box stays centred in the cell (the cell reserves the marker's former
+   space below it), which puts the marker's top at: cell centre, less half the
+   reserve the number is pushed up by, plus half the 1.7em number box, plus the
+   gap. Horizontally it is centred over the cell's content box — left/right 0
+   with auto margins, so the week-number gutter can be excluded below. */
+.calendar-planner .cp-marker {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: calc(
+		50% - var(--cp-marker-reserve) / 2 + 0.85em + var(--cp-marker-gap) +
+			var(--cp-marker-drop)
+	);
+	width: 0.5em;
+	height: var(--cp-marker-h);
+	margin-inline: auto;
+	border-radius: 1px;
+	background-color: var(--text-faint);
+}
+
+.calendar-planner .cp-grid:not(.has-preview) .cp-day:has(.cp-marker),
+.calendar-planner .cp-grid:not(.has-preview) .cp-weeknum:has(.cp-marker) {
+	padding-bottom: calc(3px + var(--cp-marker-reserve));
+}
+
+.calendar-planner .cp-weeknum .cp-marker {
+	right: var(--cp-weeknum-gutter);
+}
+
+
+/* ========================================================================
+   Day preview bands
+   ======================================================================== */
+
+.calendar-planner .cp-grid.has-preview {
+	--cp-band-font: calc(var(--cp-font-smaller) * 0.8);
+	--cp-band-h: calc(var(--cp-band-font) * 1.4 + 4px);
+	--cp-band-gap: 3px;
+	--cp-day-slots: 3;
+	--cp-preview-h: calc(
+		var(--cp-day-slots) * var(--cp-band-h) +
+			(var(--cp-day-slots) - 1) * var(--cp-band-gap)
+	);
+	--cp-marker-slot: var(--cp-marker-reserve);
+	/* Number box to first band. The marker's slot is reserved whether or not
+	   the day has a dot, so the bands never move with it. The 2px is the nudge
+	   on top of the slot — the one number to turn to tighten or loosen. */
+	--cp-band-offset: 5px;
+	/* 3px + 4px are the day cell's own top and bottom padding. */
+	--cp-day-h: calc(
+		3px + var(--cp-num-font) * 1.7 + var(--cp-band-offset) +
+			var(--cp-preview-h) + 4px
+	);
+	row-gap: 5px;
+}
+
+.calendar-planner .cp-grid.has-preview .cp-day {
+	justify-content: flex-start;
+	height: var(--cp-day-h);
+	min-width: 0;
+	padding: 3px 1px 4px;
+}
+
+.calendar-planner .cp-grid.has-preview .cp-weeknum {
+	justify-content: flex-start;
+	height: var(--cp-day-h);
+	padding: 3px var(--cp-weeknum-gutter) 4px 0;
+}
+
+/* Preview mode stacks from the top instead of centring: the marker sits one
+   gap under the number box, inside the slot --cp-band-offset reserves. */
+.calendar-planner .cp-grid.has-preview .cp-marker {
+	top: calc(1.7em + 3px + var(--cp-marker-gap) + var(--cp-marker-drop));
+}
+
+/* The bands already say the day has a note, so the dot goes invisible under
+   them — kept in place, not removed, so nothing below it moves. An empty note
+   draws no bands and keeps its dot. */
+.calendar-planner .cp-day:has(.cp-band, .cp-band-more) .cp-marker {
+	background-color: transparent;
+}
+
+.calendar-planner .cp-day-preview {
+	display: flex;
+	flex-direction: column;
+	gap: var(--cp-band-gap);
+	width: 100%;
+	min-width: 0;
+	height: var(--cp-preview-h);
+	margin-top: var(--cp-band-offset);
+	overflow: hidden;
+	z-index: 1000;
+}
+
+.calendar-planner .cp-band {
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	flex: none;
+	gap: 2px;
+	min-width: 0;
+	height: var(--cp-band-h);
+	padding: 1px 2px;
+	border-radius: 3px;
+	background-color: var(--background-modifier-hover);
+	overflow: hidden;
+	transition: background-color var(--cp-ease);
+}
+
+.calendar-planner .cp-band-check {
+	--checkbox-size: 11px;
+	flex: none;
+	top: 0;
+	margin: 0;
+}
+
+.calendar-planner .cp-band-check:not(:disabled) {
+	cursor: pointer;
+}
+
+.calendar-planner .cp-band-text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--text-normal);
+	font-size: var(--cp-band-font);
+	letter-spacing: -0.01em;
+	line-height: 1.4;
+	white-space: nowrap;
+	text-align: left;
+	text-transform: none;
+}
+
+.calendar-planner.cp-band-fade .cp-band-text {
+	-webkit-mask-image: linear-gradient(
+		to right,
+		#000 calc(100% - 12px),
+		transparent 100%
+	);
+	mask-image: linear-gradient(
+		to right,
+		#000 calc(100% - 12px),
+		transparent 100%
+	);
+}
+
+.calendar-planner .cp-band.is-done .cp-band-text {
+	color: var(--checklist-done-color, var(--text-muted));
+}
+
+.calendar-planner.cp-done-strike .cp-band.is-done .cp-band-text {
+	text-decoration: line-through;
+}
+
+.calendar-planner .cp-band-more {
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	flex: none;
+	height: var(--cp-band-h);
+	padding: 0 2px;
+	color: var(--text-faint);
+	font-size: var(--cp-band-font);
+	line-height: 1.4;
+	text-align: left;
+	cursor: default;
+}
+
+.calendar-planner .cp-band-more:hover {
+	color: var(--text-muted);
+}
+
+
+/* ========================================================================
+   Divider + Bottom Detail Panel
+   ======================================================================== */
+
+.calendar-planner .cp-divider {
+	height: 1px;
+	margin: 18px 0 16px;
+	background-color: var(--background-modifier-border);
+}
+
+.calendar-planner .cp-panel-empty {
+	padding: 28px 12px;
+	color: var(--text-faint);
+	font-size: var(--cp-font-smaller);
+	line-height: 1.5;
+	text-align: center;
+}
+
+
+/* ========================================================================
+   Panel Header
+   ======================================================================== */
+
+.calendar-planner .cp-panel-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 2px 10px;
+	margin-bottom: 16px;
+}
+
+.calendar-planner .cp-panel-title {
+	color: var(--interactive-accent);
+	font-size: 1.25em;
+	font-weight: 650;
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+	text-transform: none;
+}
+
+.calendar-planner .cp-panel-title.is-link {
+	cursor: pointer;
+	border-radius: var(--radius-s);
+	padding: 0 4px;
+	margin: 0 -4px;
+	transition: background-color var(--cp-ease), color var(--cp-ease);
+}
+
+.calendar-planner .cp-panel-title.is-link:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.calendar-planner .cp-panel-sub {
+	flex: none;
+	color: var(--text-muted);
+	font-size: var(--cp-font-smaller);
+	letter-spacing: 0.02em;
+}
+
+.calendar-planner .cp-panel-sub.is-link {
+	cursor: pointer;
+	transition: color var(--cp-ease);
+}
+
+.calendar-planner .cp-panel-sub.is-link:hover {
+	color: var(--text-normal);
+}
+
+
+/* ========================================================================
+   Panel Sections
+   ======================================================================== */
+
+.calendar-planner .cp-section {
+	margin-top: 20px;
+}
+
+.calendar-planner .cp-section:first-of-type {
+	margin-top: 0;
+}
+
+.calendar-planner .cp-section-head {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	margin-bottom: 8px;
+}
+
+.calendar-planner .cp-section-toggle {
+	display: inline-flex;
+	flex: none;
+	color: var(--text-faint);
+	cursor: pointer;
+	transition: transform var(--cp-ease), color var(--cp-ease);
+}
+
+.calendar-planner .cp-section.is-collapsed .cp-section-toggle {
+	transform: rotate(-90deg);
+}
+
+.calendar-planner .cp-section-toggle .svg-icon {
+	width: 13px;
+	height: 13px;
+}
+
+.calendar-planner .cp-section-label {
+	color: var(--text-muted);
+	font-size: calc(var(--cp-font-smaller) * 0.96);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+}
+
+.calendar-planner .cp-section-head.is-foldable .cp-section-label {
+	cursor: pointer;
+}
+
+.calendar-planner .cp-section-head.is-foldable .cp-section-toggle:hover,
+.calendar-planner .cp-section-head.is-foldable .cp-section-label:hover {
+	color: var(--text-normal);
+}
+
+.calendar-planner .cp-section.is-collapsed .cp-items,
+.calendar-planner .cp-section.is-collapsed .cp-section-empty,
+.calendar-planner .cp-section.is-collapsed .cp-memo-body {
+	display: none;
+}
+
+.calendar-planner .cp-section-add {
+	display: inline-flex;
+	flex: none;
+	margin-left: auto;
+	padding: 2px;
+	border-radius: var(--radius-s);
+	color: var(--text-faint);
+	cursor: pointer;
+	transition: background-color var(--cp-ease), color var(--cp-ease);
+}
+
+.calendar-planner .cp-section-add:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.calendar-planner .cp-section-add .svg-icon {
+	width: 13px;
+	height: 13px;
+}
+
+.calendar-planner .cp-section-empty {
+	padding: 2px 0;
+	color: var(--text-faint);
+	font-size: var(--cp-font-smaller);
+}
+
+
+/* ========================================================================
+   Panel Items
+   ======================================================================== */
+
+.calendar-planner .cp-items {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.calendar-planner .cp-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 5px;
+	padding: 4px 6px;
+	margin: 0 -6px;
+	color: var(--text-normal);
+	font-size: var(--cp-font-small);
+	line-height: 1.5;
+	border-radius: var(--radius-s);
+	transition: background-color var(--cp-ease);
+}
+
+.calendar-planner .cp-item.is-editable:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.calendar-planner .cp-item.is-nested {
+	padding-left: 1.6em;
+}
+
+.calendar-planner.cp-done-strike .cp-item.is-done {
+	text-decoration: line-through;
+}
+
+.calendar-planner.cp-done-dim .cp-item.is-done {
+	color: var(--checklist-done-color, var(--text-muted));
+}
+
+.calendar-planner .cp-item.is-editable .cp-item-text {
+	cursor: text;
+}
+
+.calendar-planner .cp-item.is-editable:focus-visible {
+	outline: 1px solid var(--background-modifier-border-focus);
+	outline-offset: -1px;
+	border-radius: var(--radius-s);
+}
+
+
+/* ========================================================================
+   Event Bullet
+   ======================================================================== */
+
+.calendar-planner .cp-bullet {
+	flex: none;
+	width: 4px;
+	height: 4px;
+	margin-top: 0.6em;
+	margin-right: 5px;
+	border-radius: 50%;
+	background-color: var(--text-faint);
+}
+
+
+/* ========================================================================
+   Todo Checkbox
+   ======================================================================== */
+
+.calendar-planner .cp-check {
+	flex: none;
+	margin: 0.2em 0 0;
+}
+
+.calendar-planner .cp-check:not(:disabled) {
+	cursor: pointer;
+}
+
+
+/* ========================================================================
+   Item Text
+   ======================================================================== */
+
+.calendar-planner .cp-item-text {
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
+	text-transform: none;
+}
+
+.calendar-planner .cp-item-meta {
+	flex: none;
+	color: var(--text-faint);
+	font-size: 0.9em;
+	line-height: calc(var(--cp-font-small) * 1.5);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	text-transform: none;
+}
+
+.calendar-planner .cp-item-img {
+	display: block;
+	max-width: 100%;
+	max-height: 220px;
+	width: auto;
+	height: auto;
+	margin: 2px 0;
+	border-radius: var(--radius-s);
+	object-fit: contain;
+	object-position: left top;
+}
+
+
+/* ========================================================================
+   Memo — one free-form text block (bullets, code fences, prose)
+   ======================================================================== */
+
+.calendar-planner .cp-memo-body {
+	margin-top: 2px;
+}
+
+.calendar-planner .cp-memo-body.is-editable {
+	cursor: text;
+}
+
+.calendar-planner .cp-memo-body.is-empty.is-editable {
+	min-height: 1.8em;
+	margin: 0 -6px;
+	padding: 0 6px;
+	border-radius: var(--radius-s);
+	transition: background-color var(--cp-ease);
+}
+
+.calendar-planner .cp-memo-body.is-empty.is-editable:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.calendar-planner .is-drop-target {
+	outline: 2px dashed var(--interactive-accent);
+	outline-offset: 2px;
+	border-radius: var(--radius-s);
+}
+
+.calendar-planner .cp-memo-md {
+	--table-text-size: var(--cp-font-small);
+	--table-header-size: var(--cp-font-small);
+	--table-line-height: 1.4;
+	--font-text-size: var(--cp-font-small);
+	color: var(--text-normal);
+	font-size: var(--cp-font-small);
+	line-height: 1.6;
+	overflow-wrap: anywhere;
+	text-transform: none;
+}
+
+.cp-setting-invalid {
+	border-color: var(--text-error) !important;
+}
+
+
+/* ------------------------------------------------------------------------
+   Settings: checked-item style picker
+   ------------------------------------------------------------------------ */
+
+.cp-done-control {
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 8px;
+	min-width: 0;
+}
+
+.cp-done-control select {
+	max-width: 100%;
+}
+
+.cp-done-sample {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	max-width: 100%;
+	padding: 4px 10px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background-color: var(--background-secondary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	pointer-events: none;
+}
+
+.cp-done-sample input {
+	flex: none;
+	margin: 0;
+}
+
+.cp-done-sample-text {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.cp-done-sample.is-strike {
+	text-decoration: line-through;
+}
+
+.cp-done-sample.is-dim {
+	color: var(--checklist-done-color, var(--text-muted));
+}
+
+.calendar-planner .cp-memo-md .internal-embed {
+	display: block;
+}
+
+.calendar-planner .cp-memo-md img {
+	max-width: 100%;
+	height: auto;
+	border-radius: var(--radius-s);
+}
+
+.calendar-planner .cp-memo-md .cp-memo-task {
+	cursor: pointer;
+}
+
+.calendar-planner .cp-memo-md > :first-child {
+	margin-top: 0;
+}
+
+.calendar-planner .cp-memo-md > :last-child {
+	margin-bottom: 0;
+}
+
+.calendar-planner .cp-memo-md p,
+.calendar-planner .cp-memo-md ul,
+.calendar-planner .cp-memo-md ol,
+.calendar-planner .cp-memo-md pre,
+.calendar-planner .cp-memo-md blockquote {
+	margin: 0.35em 0;
+}
+
+.calendar-planner .cp-memo-md h1,
+.calendar-planner .cp-memo-md h2,
+.calendar-planner .cp-memo-md h3,
+.calendar-planner .cp-memo-md h4,
+.calendar-planner .cp-memo-md h5,
+.calendar-planner .cp-memo-md h6 {
+	margin: 0.6em 0 0.25em;
+	color: var(--text-normal);
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.calendar-planner .cp-memo-md h1 {
+	font-size: 1.25em;
+}
+
+.calendar-planner .cp-memo-md h2 {
+	font-size: 1.15em;
+}
+
+.calendar-planner .cp-memo-md h3 {
+	font-size: 1.05em;
+}
+
+.calendar-planner .cp-memo-md h4,
+.calendar-planner .cp-memo-md h5,
+.calendar-planner .cp-memo-md h6 {
+	font-size: 1em;
+	color: var(--text-muted);
+}
+
+.calendar-planner .cp-memo-md ul,
+.calendar-planner .cp-memo-md ol {
+	padding-left: 1.4em;
+}
+
+.calendar-planner .cp-memo-md pre {
+	max-width: 100%;
+	overflow-x: auto;
+	white-space: pre;
+}
+
+.calendar-planner .cp-memo-md table {
+	display: block;
+	width: fit-content;
+	max-width: 100%;
+	margin: 0.35em 0;
+	overflow-x: auto;
+	border-collapse: collapse;
+	font-size: var(--cp-font-small);
+	line-height: 1.4;
+}
+
+.calendar-planner .cp-memo-md th,
+.calendar-planner .cp-memo-md td {
+	padding: 3px 7px;
+	border: 1px solid var(--background-modifier-border);
+	font-size: inherit;
+	line-height: inherit;
+	overflow-wrap: normal;
+}
+
+.calendar-planner .cp-memo-md th {
+	background-color: var(--background-secondary);
+	font-weight: 600;
+}
+
+.calendar-planner .cp-memo-body.is-editing {
+	padding: 4px 6px;
+	border: 1px solid var(--background-modifier-border-focus);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+}
+
+.calendar-planner .cp-cm {
+	color: var(--text-normal);
+	font-family: inherit;
+	font-size: var(--cp-font-small);
+	line-height: 1.5;
+	tab-size: 2;
+	text-transform: none;
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+.calendar-planner .cp-cm .cm-scroller {
+	font-family: inherit;
+	line-height: 1.5;
+	overflow-x: hidden;
+}
+
+.calendar-planner .cp-cm .cm-content {
+	padding: 0;
+	caret-color: var(--text-normal);
+}
+
+.calendar-planner .cp-cm .cm-line {
+	padding: 0;
+}
+
+.calendar-planner .cp-cm.cm-focused {
+	outline: none;
+}
+
+.calendar-planner .cp-cm .cp-cm-h1,
+.calendar-planner .cp-cm .cp-cm-h2,
+.calendar-planner .cp-cm .cp-cm-h3,
+.calendar-planner .cp-cm .cp-cm-h4,
+.calendar-planner .cp-cm .cp-cm-h5,
+.calendar-planner .cp-cm .cp-cm-h6 {
+	color: var(--text-normal);
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.calendar-planner .cp-cm .cp-cm-h1 {
+	font-size: 1.25em;
+}
+
+.calendar-planner .cp-cm .cp-cm-h2 {
+	font-size: 1.15em;
+}
+
+.calendar-planner .cp-cm .cp-cm-h3 {
+	font-size: 1.05em;
+}
+
+.calendar-planner .cp-cm .cp-cm-h4,
+.calendar-planner .cp-cm .cp-cm-h5,
+.calendar-planner .cp-cm .cp-cm-h6 {
+	color: var(--text-muted);
+}
+
+.calendar-planner .cp-cm .cp-cm-strong {
+	font-weight: 700;
+}
+
+.calendar-planner .cp-cm .cp-cm-em {
+	font-style: italic;
+}
+
+.calendar-planner .cp-cm .cp-cm-strike {
+	text-decoration: line-through;
+	color: var(--text-muted);
+}
+
+.calendar-planner .cp-cm .cp-cm-code {
+	padding: 0 4px;
+	border-radius: var(--radius-s);
+	background-color: var(--background-modifier-hover);
+	font-family: var(--font-monospace);
+	font-size: 0.9em;
+}
+
+.calendar-planner .cp-cm .cp-cm-link {
+	color: var(--text-accent);
+}
+
+.calendar-planner .cp-cm .cp-cm-quote {
+	padding-left: 8px;
+	border-left: 2px solid var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.calendar-planner .cp-cm .cp-cm-bullet {
+	color: var(--text-faint);
+}
+
+.calendar-planner .cp-cm .cp-cm-task {
+	margin: 0 0.3em 0 0;
+	vertical-align: -0.15em;
+	cursor: pointer;
+}
+
+.calendar-planner .cp-cm .cp-cm-image img {
+	max-width: 100%;
+	height: auto;
+	border-radius: var(--radius-s);
+	vertical-align: top;
+}
+
+
+/* ========================================================================
+   Inline Edit Input
+   ======================================================================== */
+
+.calendar-planner .cp-item-input {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	color: var(--text-normal);
+	font: inherit;
+	line-height: inherit;
+	height: 1.45em;
+	min-height: 0;
+	box-sizing: border-box;
+	outline: none;
+	box-shadow: inset 0 -1px 0 var(--background-modifier-border-focus);
+	text-transform: none;
+}
+
+
+/* ========================================================================
+   Delete Affordance
+   ======================================================================== */
+
+.calendar-planner .cp-item-del {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	margin-top: 0.2em;
+	padding: 0 1px;
+	color: var(--text-faint);
+	cursor: pointer;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity var(--cp-ease), color var(--cp-ease);
+}
+
+.calendar-planner .cp-item:hover .cp-item-del,
+.calendar-planner .cp-item:focus-within .cp-item-del {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.calendar-planner .cp-item-del:hover {
+	color: var(--text-error);
+}
+
+.calendar-planner .cp-item-del .svg-icon {
+	width: 12px;
+	height: 12px;
+}
+
+
+/* ========================================================================
+   Mobile
+   ======================================================================== */
+
+.is-mobile .calendar-planner .cp-item-del {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+
+/* ========================================================================
+   Reduced motion
+   ======================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+	.calendar-planner *,
+	.calendar-planner *::before,
+	.calendar-planner *::after {
+		transition-duration: 0.01ms !important;
+	}
+}
